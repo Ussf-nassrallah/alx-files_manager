@@ -11,8 +11,9 @@ const configureRoutes = (app) => {
   app.get('/status', (req, res) => AppController.getStatus(req, res));
   app.get('/stats', (req, res) => AppController.getStats(req, res));
   app.post('/users', (req, res) => UsersController.postNew(req, res));
+
   app.get('/connect', basicAuth, (req, res) => AuthController.getConnect(req, res));
-  app.get('/disconnect', (req, res) => AuthController.getDisconnect(req, res));
+  app.get('/disconnect', tokenAuth, (req, res) => AuthController.getDisconnect(req, res));
   app.get('/users/me', tokenAuth, (req, res) => UsersController.getMe(req, res));
 };
 
