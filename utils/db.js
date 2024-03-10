@@ -28,6 +28,11 @@ class DBClient {
     // returns the number of documents in the collection files.
     return this.client.db().collection('files').countDocuments();
   }
+
+  async getUsersCollection() {
+    // get users collection from DB
+    return this.client.db().collection('users');
+  }
 }
 
 export const dbClient = new DBClient();
