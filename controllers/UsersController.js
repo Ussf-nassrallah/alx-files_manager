@@ -38,7 +38,17 @@ class UsersController {
       const newUserId = newUser.insertedId.toString();
       res.status(201).json({ email: userEmail, id: newUserId });
     } catch (error) {
-      console.error(`Error in postNew -> ${error}`);
+      console.error(`Error in postNew: ${error}`);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+
+  static async getMe(req, res) {
+    try {
+      const { user } = req;
+      res.status(200).json({ id: user._id.toString(), email: user.email });
+    } catch (error) {
+      console.error(`Error in getMe: ${error}`);
       res.status(500).json({ error: 'Internal Server Error' });
     }
   }
