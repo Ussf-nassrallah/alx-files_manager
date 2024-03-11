@@ -128,6 +128,8 @@ export const createFile = async (
       parentId: parentId || 0,
       localPath: fileName,
     });
+    // Log the server response text
+    console.log('Server response:', file);
     // respond with the inserted file information
     res.status(201).json({
       id: file.insertedId,
