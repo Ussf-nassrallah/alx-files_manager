@@ -1,8 +1,8 @@
 /* server */
 /* eslint-disable import/no-named-as-default */
 import express from 'express';
-import configureRoutes from './routes';
 import bodyParser from 'body-parser';
+import configureRoutes from './routes';
 
 const app = express();
 
