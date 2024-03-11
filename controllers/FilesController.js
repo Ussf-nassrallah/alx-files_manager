@@ -1,5 +1,4 @@
 /* eslint-disable import/no-named-as-default */
-/* eslint-disable no-unused-vars */
 import Queue from 'bull';
 import { ObjectID } from 'mongodb';
 import dbClient from '../utils/db';

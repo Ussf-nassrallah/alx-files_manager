@@ -1,4 +1,3 @@
-/* eslint-disable import/no-named-as-default */
 import express from 'express';
 import bodyParser from 'body-parser';
 import configureRoutes from './routes';
