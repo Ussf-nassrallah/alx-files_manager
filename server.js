@@ -1,8 +1,8 @@
-/* First API */
+/* server */
+/* eslint-disable import/no-named-as-default */
 import express from 'express';
 import configureRoutes from './routes';
-
-const bodyParser = require('body-parser');
+import bodyParser from 'body-parser';
 
 const app = express();
 
