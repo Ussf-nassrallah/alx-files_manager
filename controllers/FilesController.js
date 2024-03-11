@@ -25,7 +25,8 @@ class FilesController {
     const fileType = req.body ? req.body.type : null;
     const parentId = req.body && req.body.parentId ? req.body.parentId : DEFAULT_FOLDER_ID;
     const isPublic = req.body && req.body.isPublic ? req.body.isPublic : false;
-    const fileData = req.body && req.body.data; // only for type=file|image
+    // only for type=file|image
+    const fileData = req.body && req.body.data ? req.body.data : '';
 
     // Check file information received from the client
     if (!fileName) {
@@ -38,7 +39,7 @@ class FilesController {
       return;
     }
 
-    if (!fileData && fileType !== FILE_TYPES.folder) {
+    if (!req.body.data && fileType !== FILE_TYPES.folder) {
       res.status(400).json({ error: 'Missing data' });
       return;
     }
@@ -46,7 +47,7 @@ class FilesController {
     // Retrieve files collection from DB
     const files = await dbClient.getFilesCollection();
 
-    if (parentId) {
+    if ((parentId !== DEFAULT_FOLDER_ID) && (parentId !== DEFAULT_FOLDER_ID.toString())) {
       // Assuming parentId is a string containing a valid hexadecimal ObjectId
       const objId = new ObjectID(parentId);
       const parent = files.findOne({ _id: objId, userId: user._id });
