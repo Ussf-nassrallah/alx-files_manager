@@ -33,6 +33,11 @@ class DBClient {
     // get users collection from DB
     return this.client.db().collection('users');
   }
+
+  async getFilesCollection() {
+    // get files collection from DB
+    return this.client.db().collection('files');
+  }
 }
 
 export const dbClient = new DBClient();
