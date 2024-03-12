@@ -99,7 +99,7 @@ class FilesController {
       const fileId = req.params.id;
       const file = await (await dbClient.getFilesCollection()).findOne({
         _id: mongoDBCore.BSON.ObjectId(fileId),
-        userId: user._id,
+        userId: mongoDBCore.BSON.ObjectId(user._id),
       });
       if (!file) {
         return res.status(404).json({ error: 'Not found' });
@@ -145,7 +145,7 @@ class FilesController {
       if (result && result.length > 0) {
         const formattedData = result[0].data.map(({ _id, localPath, ...file }) => ({
           ...file,
-          id: _id,
+          id: ObjectID(_id),
         }));
         return res.status(200).json(formattedData);
       }
