@@ -18,6 +18,8 @@ const configureRoutes = (app) => {
   app.get('/users/me', tokenAuth, (req, res) => UsersController.getMe(req, res));
 
   app.post('/files', tokenAuth, (req, res) => FilesController.postUpload(req, res));
+  app.get('/files/:id', tokenAuth, (req, res) => FilesController.getShow(req, res));
+  app.get('/files', tokenAuth, (req, res) => FilesController.getIndex(req, res));
 };
 
 export default configureRoutes;

@@ -1,6 +1,7 @@
 /* eslint-disable import/no-named-as-default */
 import Queue from 'bull';
 import { ObjectID } from 'mongodb';
+import mongoDBCore from 'mongodb/lib/core';
 import dbClient from '../utils/db';
 import { createFile, createFolder } from '../utils/helper';
 
@@ -89,6 +90,71 @@ class FilesController {
         fileData,
         fileQueue,
       );
+    }
+  }
+
+  static async getShow(req, res) {
+    const { user } = req;
+    try {
+      const fileId = req.params.id;
+      const file = await (await dbClient.getFilesCollection()).findOne({
+        _id: mongoDBCore.BSON.ObjectId(fileId),
+        userId: user._id,
+      });
+      if (!file) {
+        return res.status(404).json({ error: 'Not found' });
+      }
+      return res.status(201).json({
+        id: file._id,
+        userId: file.userId,
+        name: file.name,
+        type: file.type,
+        isPublic: file.isPublic,
+        parentId: file.parentId,
+      });
+    } catch (error) {
+      console.log(`Error in getShow: ${error}`);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+
+  static async getIndex(req, res) {
+    try {
+      const { user } = req;
+      const { parentId, page } = req.query;
+      const pageNum = parseInt(page, 10) || 0;
+      const filesCollection = await dbClient.getFilesCollection();
+
+      const query = parentId
+        ? { userId: ObjectID(user._id), parentId: ObjectID(parentId).toString() }
+        : { userId: ObjectID(user._id) };
+
+      const aggregationPipeline = [
+        { $match: query },
+        { $sort: { _id: -1 } },
+        {
+          $facet: {
+            metadata: [{ $count: 'total' }, { $addFields: { page: parseInt(pageNum, 10) } }],
+            data: [{ $skip: 20 * parseInt(pageNum, 10) }, { $limit: 20 }],
+          },
+        },
+      ];
+
+      const result = await filesCollection.aggregate(aggregationPipeline).toArray();
+
+      if (result && result.length > 0) {
+        const formattedData = result[0].data.map(({ _id, localPath, ...file }) => ({
+          ...file,
+          id: _id,
+        }));
+        return res.status(200).json(formattedData);
+      }
+
+      console.log('Error occurred');
+      return res.status(404).json({ error: 'Not found' });
+    } catch (error) {
+      console.error('Error in getIndex:', error);
+      return res.status(500).json({ error: 'Internal Server Error' });
     }
   }
 }
