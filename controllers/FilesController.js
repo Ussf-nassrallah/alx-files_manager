@@ -157,6 +157,70 @@ class FilesController {
       return res.status(500).json({ error: 'Internal Server Error' });
     }
   }
+
+  static async putPublish(req, res) {
+    const { user } = req;
+    const fileId = req.params.id;
+
+    const files = await dbClient.getFilesCollection();
+    const objId = new ObjectID(fileId);
+
+    const updatedValue = { $set: { isPublic: true } };
+    const options = { returnOriginal: false };
+
+    files.findOneAndUpdate(
+      { _id: objId, userId: user._id },
+      updatedValue, options, (err, result) => {
+        if (!result.lastErrorObject.updatedExisting) {
+          return res.status(404).json({ error: 'Not found' });
+        }
+
+        const file = result.value;
+
+        return res.status(200).json({
+          id: file._id,
+          userId: file.userId,
+          name: file.name,
+          type: file.type,
+          isPublic: file.isPublic,
+          parentId: file.parentId,
+        });
+      },
+    );
+
+    return null;
+  }
+
+  static async putUnpublish(req, res) {
+    const { user } = req;
+    const fileId = req.params.id;
+
+    const files = await dbClient.getFilesCollection();
+    const objId = new ObjectID(fileId);
+    const updatedValue = { $set: { isPublic: false } };
+    const options = { returnOriginal: false };
+
+    files.findOneAndUpdate(
+      { _id: objId, userId: user._id },
+      updatedValue, options, (err, result) => {
+        if (!result.lastErrorObject.updatedExisting) {
+          return res.status(404).json({ error: 'Not found' });
+        }
+
+        const file = result.value;
+
+        return res.status(200).json({
+          id: file._id,
+          userId: file.userId,
+          name: file.name,
+          type: file.type,
+          isPublic: file.isPublic,
+          parentId: file.parentId,
+        });
+      },
+    );
+    return null;
+  }
 }
 
 export default FilesController;

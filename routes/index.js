@@ -20,6 +20,8 @@ const configureRoutes = (app) => {
   app.post('/files', tokenAuth, (req, res) => FilesController.postUpload(req, res));
   app.get('/files/:id', tokenAuth, (req, res) => FilesController.getShow(req, res));
   app.get('/files', tokenAuth, (req, res) => FilesController.getIndex(req, res));
+  app.put('/files/:id/publish', tokenAuth, (req, res) => FilesController.putPublish(req, res));
+  app.put('/files/:id/unpublish', tokenAuth, (req, res) => FilesController.putUnpublish(req, res));
 };
 
 export default configureRoutes;
