@@ -5,12 +5,10 @@ import mongoDBCore from 'mongodb/lib/core';
 import dbClient from '../utils/db';
 import { createFile, createFolder } from '../utils/helper';
 
-const { promisify } = require('util');
 const fs = require('fs');
 const mime = require('mime-types');
 
 const fileQueue = new Queue('fileQueue', 'redis://127.0.0.1:6379');
-const readFileAsync = promisify(fs.readFile);
 const DEFAULT_FOLDER_ID = 0;
 
 const FILE_TYPES = {
@@ -227,54 +225,64 @@ class FilesController {
   }
 
   static async getFile(req, res) {
-    try {
-      const { id } = req.params;
-      const filesCollection = await dbClient.getFilesCollection();
-      const file = await filesCollection.findOne({ _id: ObjectID(id) });
+    const { id } = req.params;
+    const files = await dbClient.getFilesCollection();
+    const objId = new ObjectID(id);
 
+    files.findOne({ _id: objId }, async (err, file) => {
       if (!file) {
-        return res.status(404).json({ error: 'File not found' });
+        return res.status(404).json({ error: 'Not found' });
       }
+
+      console.log(file.localPath);
 
       if (file.isPublic) {
         if (file.type === 'folder') {
           return res.status(400).json({ error: "A folder doesn't have content" });
         }
 
-        let fileName = file.localPath;
-        const size = req.param('size');
-        if (size) {
-          fileName = `${file.localPath}_${size}`;
+        try {
+          let fileName = file.localPath;
+          const size = req.param('size');
+
+          if (size) {
+            fileName = `${file.localPath}_${size}`;
+          }
+
+          const data = await fs.readFile(fileName);
+          const contentType = mime.contentType(file.name);
+
+          return res.header('Content-Type', contentType).status(200).send(data);
+        } catch (error) {
+          console.log(error);
+          return res.status(404).json({ error: 'Not found' });
         }
+      } else {
+        const { user } = req;
 
-        const data = await readFileAsync(fileName);
-        const contentType = mime.contentType(file.name);
+        if (file.userId.toString() === user._id.toString()) {
+          if (file.type === 'folder') {
+            return res.status(400).json({ error: "A folder doesn't have content" });
+          }
 
-        return res.header('Content-Type', contentType).status(200).send(data);
+          try {
+            let fileName = file.localPath;
+            const size = req.param('size');
+            if (size) {
+              fileName = `${file.localPath}_${size}`;
+            }
+            const contentType = mime.contentType(file.name);
+            return res.header('Content-Type', contentType).status(200).sendFile(fileName);
+          } catch (error) {
+            console.log(error);
+            return res.status(404).json({ error: 'Not found' });
+          }
+        } else {
+          console.log(`Wrong user: file.userId=${file.userId}; userId=${user._id}`);
+          return res.status(404).json({ error: 'Not found' });
+        }
       }
-      const { user } = req;
-
-      if (file.userId.toString() !== user._id.toString()) {
-        console.log(`Wrong user: file.userId=${file.userId}; userId=${user._id}`);
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
-
-      if (file.type === 'folder') {
-        return res.status(400).json({ error: "A folder doesn't have content" });
-      }
-
-      let fileName = file.localPath;
-      const size = req.param('size');
-      if (size) {
-        fileName = `${file.localPath}_${size}`;
-      }
-
-      const contentType = mime.contentType(file.name);
-      return res.header('Content-Type', contentType).status(200).sendFile(fileName);
-    } catch (error) {
-      console.error('Error in getFile:', error);
-      return res.status(500).json({ error: 'Internal Server Error' });
-    }
+    });
   }
 }
 
